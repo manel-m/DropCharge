@@ -15,6 +15,8 @@
 		99C720BE23EBBB9B0030942C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 99C720BC23EBBB9B0030942C /* Main.storyboard */; };
 		99C720C023EBBBA80030942C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99C720BF23EBBBA80030942C /* Assets.xcassets */; };
 		99C720C323EBBBA80030942C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 99C720C123EBBBA80030942C /* LaunchScreen.storyboard */; };
+		99C720CC23ED0E830030942C /* Platform5Across.sks in Resources */ = {isa = PBXBuildFile; fileRef = 99C720CB23ED0E830030942C /* Platform5Across.sks */; };
+		99C720CE23ED171B0030942C /* CoinArrow.sks in Resources */ = {isa = PBXBuildFile; fileRef = 99C720CD23ED171B0030942C /* CoinArrow.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		99C720BF23EBBBA80030942C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99C720C223EBBBA80030942C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		99C720C423EBBBA80030942C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		99C720CB23ED0E830030942C /* Platform5Across.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Platform5Across.sks; sourceTree = "<group>"; };
+		99C720CD23ED171B0030942C /* CoinArrow.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = CoinArrow.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,7 @@
 		99C720B123EBBB9B0030942C /* DropCharge */ = {
 			isa = PBXGroup;
 			children = (
+				99C720CA23ED0E210030942C /* Scene Files */,
 				99C720B223EBBB9B0030942C /* AppDelegate.swift */,
 				99C720B423EBBB9B0030942C /* GameScene.sks */,
 				99C720B623EBBB9B0030942C /* Actions.sks */,
@@ -71,6 +76,15 @@
 				99C720C423EBBBA80030942C /* Info.plist */,
 			);
 			path = DropCharge;
+			sourceTree = "<group>";
+		};
+		99C720CA23ED0E210030942C /* Scene Files */ = {
+			isa = PBXGroup;
+			children = (
+				99C720CB23ED0E830030942C /* Platform5Across.sks */,
+				99C720CD23ED171B0030942C /* CoinArrow.sks */,
+			);
+			path = "Scene Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -131,11 +145,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99C720CE23ED171B0030942C /* CoinArrow.sks in Resources */,
 				99C720BE23EBBB9B0030942C /* Main.storyboard in Resources */,
 				99C720B523EBBB9B0030942C /* GameScene.sks in Resources */,
 				99C720C023EBBBA80030942C /* Assets.xcassets in Resources */,
 				99C720C323EBBBA80030942C /* LaunchScreen.storyboard in Resources */,
 				99C720B723EBBB9B0030942C /* Actions.sks in Resources */,
+				99C720CC23ED0E830030942C /* Platform5Across.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
