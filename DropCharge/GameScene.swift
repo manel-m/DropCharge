@@ -48,6 +48,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
       setupNodes()
       setupLevel()
+      setupPlayer()
       let scale = SKAction.scale(to: 1.0, duration: 0.5)
       fgNode.childNode(withName: "Ready")!.run(scale)
     }
@@ -78,6 +79,14 @@ class GameScene: SKScene {
         while lastOverlayPosition.y < levelPositionY {
           addRandomForegroundOverlay()
         }
+    }
+    
+    func setupPlayer() {
+        player.physicsBody = SKPhysicsBody(circleOfRadius:player.size.width * 0.3)
+        player.physicsBody!.isDynamic = false
+        player.physicsBody!.allowsRotation = false
+        player.physicsBody!.categoryBitMask = 0
+        player.physicsBody!.collisionBitMask = 0
     }
     
     // MARK: - Overlay nodes
@@ -145,9 +154,26 @@ class GameScene: SKScene {
     }
         func startGame() {
         fgNode.childNode(withName: "Bomb")!.removeFromParent()
-        gameState = .playing }
+        gameState = .playing
+        player.physicsBody!.isDynamic = true
+        superBoostPlayer()
+            
+    }
     
+    func setPlayerVelocity(_ amount:CGFloat) {
+        let gain: CGFloat = 1.5
+        player.physicsBody!.velocity.dy = max(player.physicsBody!.velocity.dy, amount * gain)
         
-        
+    }
+    func jumpPlayer() {
+      setPlayerVelocity(650)
+    }
+    func boostPlayer() {
+      setPlayerVelocity(1200)
+    }
+    func superBoostPlayer() {
+      setPlayerVelocity(1700)
+    }
+    
     }
 
