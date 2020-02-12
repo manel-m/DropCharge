@@ -91,7 +91,6 @@
 				99C720CF23ED1D010030942C /* SKTUtils */,
 				99C720CA23ED0E210030942C /* Scene Files */,
 				99C720B223EBBB9B0030942C /* AppDelegate.swift */,
-				99C720B423EBBB9B0030942C /* GameScene.sks */,
 				99C720B623EBBB9B0030942C /* Actions.sks */,
 				99C720B823EBBB9B0030942C /* GameScene.swift */,
 				99C720BA23EBBB9B0030942C /* GameViewController.swift */,
@@ -107,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				99C720CB23ED0E830030942C /* Platform5Across.sks */,
+				99C720B423EBBB9B0030942C /* GameScene.sks */,
 				99C720CD23ED171B0030942C /* CoinArrow.sks */,
 			);
 			path = "Scene Files";

@@ -8,6 +8,16 @@
 
 import SpriteKit
 
+struct PhysicsCategory {
+    static let None: UInt32 = 0
+    static let Player: UInt32 = 0b1         // 1
+    static let PlatformNormal: UInt32 = 0b10  // 2
+    static let PlatformBreakable: UInt32 = 0b100  // 4
+    static let CoinNormal: UInt32 = 0b1000 // 8
+    static let CoinSpecial: UInt32 =  0b10000  // 16
+    static let Edges: UInt32 = 0b100000 // 32
+}
+
 // MARK: - Game States
 enum GameStatus: Int {
     case waitingForTap = 0
@@ -23,7 +33,7 @@ enum PlayerStatus: Int {
     case dead = 4
 }
 
-class GameScene: SKScene {
+class GameScene: SKScene , SKPhysicsContactDelegate{
 // MARK: - Properties
 // 1
     var bgNode: SKNode!
@@ -51,6 +61,25 @@ class GameScene: SKScene {
       setupPlayer()
       let scale = SKAction.scale(to: 1.0, duration: 0.5)
       fgNode.childNode(withName: "Ready")!.run(scale)
+      physicsWorld.contactDelegate = self
+
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        let other = contact.bodyA.categoryBitMask == PhysicsCategory.Player ? contact.bodyB : contact.bodyA
+        switch other.categoryBitMask {
+            case PhysicsCategory.CoinNormal:
+                if let coin = other.node as? SKSpriteNode { coin.removeFromParent()
+                    jumpPlayer()
+                    }
+            case PhysicsCategory.PlatformNormal:
+                if let _ = other.node as? SKSpriteNode {
+                    if player.physicsBody!.velocity.dy < 0 {
+                        jumpPlayer()
+                    }
+            } default:
+            break
+        }
     }
     func setupNodes() {
     let worldNode = childNode(withName: "World")!
@@ -85,8 +114,9 @@ class GameScene: SKScene {
         player.physicsBody = SKPhysicsBody(circleOfRadius:player.size.width * 0.3)
         player.physicsBody!.isDynamic = false
         player.physicsBody!.allowsRotation = false
-        player.physicsBody!.categoryBitMask = 0
+        //player.physicsBody!.categoryBitMask = 0
         player.physicsBody!.collisionBitMask = 0
+        player.physicsBody!.categoryBitMask = PhysicsCategory.Player
     }
     
     // MARK: - Overlay nodes
@@ -156,7 +186,7 @@ class GameScene: SKScene {
         fgNode.childNode(withName: "Bomb")!.removeFromParent()
         gameState = .playing
         player.physicsBody!.isDynamic = true
-        superBoostPlayer()
+        boostPlayer()
             
     }
     
