@@ -60,6 +60,9 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
      let motionManager = CMMotionManager()
     var xAcceleration = CGFloat(0)
     
+    //5
+    let cameraNode = SKCameraNode()
+    
     
     override func didMove(to view: SKView) {
       setupNodes()
@@ -91,6 +94,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     
     override func update(_ currentTime: TimeInterval) {
       updatePlayer()
+      updateCamera()
     }
     
     func sceneCropAmount() -> CGFloat {
@@ -112,6 +116,8 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         fgNode.childNode(withName: "Bomb")?.run(SKAction.hide())
         platform5Across = loadForegroundOverlayTemplate("Platform5Across")
         coinArrow = loadForegroundOverlayTemplate("CoinArrow")
+        addChild(cameraNode)
+        camera = cameraNode
     }
     
     func setupLevel() {
@@ -263,6 +269,21 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     }
     func superBoostPlayer() {
       setPlayerVelocity(1700)
+    }
+    
+    
+    func updateCamera() {
+      // 1
+        let cameraTarget = convert(player.position, from: fgNode)
+     // 2
+          
+        let targetPositionY = cameraTarget.y - (size.height * 0.10) // 3
+        let diff = targetPositionY - camera!.position.y
+    // 4
+        let cameraLagFactor: CGFloat = 0.2
+        let lagDiff = diff * cameraLagFactor
+        let newCameraPositionY = camera!.position.y + lagDiff // 5
+        camera!.position.y = newCameraPositionY
     }
     
     }
