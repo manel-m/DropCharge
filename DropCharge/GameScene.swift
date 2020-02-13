@@ -7,6 +7,7 @@
 //
 
 import SpriteKit
+import CoreMotion
 
 struct PhysicsCategory {
     static let None: UInt32 = 0
@@ -54,6 +55,11 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
      var gameState = GameStatus.waitingForTap
      var playerState = PlayerStatus.idle
     
+    //4
+    
+     let motionManager = CMMotionManager()
+    var xAcceleration = CGFloat(0)
+    
     
     override func didMove(to view: SKView) {
       setupNodes()
@@ -61,6 +67,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
       setupPlayer()
       let scale = SKAction.scale(to: 1.0, duration: 0.5)
       fgNode.childNode(withName: "Ready")!.run(scale)
+      setupCoreMotion()
       physicsWorld.contactDelegate = self
 
     }
@@ -81,16 +88,30 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
             break
         }
     }
+    
+    override func update(_ currentTime: TimeInterval) {
+      updatePlayer()
+    }
+    
+    func sceneCropAmount() -> CGFloat {
+        guard let view = view else {
+            return 0 }
+        let scale = view.bounds.size.height / size.height
+        let scaledWidth = size.width * scale
+        let scaledOverlap = scaledWidth - view.bounds.size.width
+        return scaledOverlap / scale
+    }
+    
     func setupNodes() {
-    let worldNode = childNode(withName: "World")!
-    bgNode = worldNode.childNode(withName: "Background")!
-    backgroundOverlayTemplate = bgNode.childNode(withName: "Overlay")!.copy() as! SKNode
-    backgroundOverlayHeight = backgroundOverlayTemplate.calculateAccumulatedFrame().height
-    fgNode = worldNode.childNode(withName: "Foreground")!
-    player = fgNode.childNode(withName: "Player") as!SKSpriteNode
-    fgNode.childNode(withName: "Bomb")?.run(SKAction.hide())
-    platform5Across = loadForegroundOverlayTemplate("Platform5Across")
-    coinArrow = loadForegroundOverlayTemplate("CoinArrow")
+        let worldNode = childNode(withName: "World")!
+        bgNode = worldNode.childNode(withName: "Background")!
+        backgroundOverlayTemplate = bgNode.childNode(withName: "Overlay")!.copy() as! SKNode
+        backgroundOverlayHeight = backgroundOverlayTemplate.calculateAccumulatedFrame().height
+        fgNode = worldNode.childNode(withName: "Foreground")!
+        player = fgNode.childNode(withName: "Player") as!SKSpriteNode
+        fgNode.childNode(withName: "Bomb")?.run(SKAction.hide())
+        platform5Across = loadForegroundOverlayTemplate("Platform5Across")
+        coinArrow = loadForegroundOverlayTemplate("CoinArrow")
     }
     
     func setupLevel() {
@@ -117,6 +138,45 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         //player.physicsBody!.categoryBitMask = 0
         player.physicsBody!.collisionBitMask = 0
         player.physicsBody!.categoryBitMask = PhysicsCategory.Player
+    }
+    
+    func updatePlayer() {
+     // Set velocity based on core motion
+        player.physicsBody?.velocity.dx = xAcceleration * 1000.0
+        
+    // Wrap player around edges of screen
+        var playerPosition = convert(player.position, from: fgNode)
+        let rightLimit = size.width/2 - sceneCropAmount()/2 + player.size.width/2
+        let leftLimit = -rightLimit
+        if playerPosition.x < leftLimit {
+            playerPosition = convert(CGPoint(x: rightLimit, y: 0.0),to: fgNode)
+            player.position.x = playerPosition.x
+        }
+        else if playerPosition.x > rightLimit {
+            playerPosition = convert(CGPoint(x: leftLimit, y: 0.0), to: fgNode)
+            player.position.x = playerPosition.x
+        }
+        // Check player state
+        if player.physicsBody!.velocity.dy < CGFloat(0.0) && playerState != .fall {
+            playerState = .fall
+            print("Falling.")
+        } else if player.physicsBody!.velocity.dy > CGFloat(0.0) && playerState != .jump {
+            playerState = .jump
+            print("Jumping.")
+        }
+
+    }
+    
+    func setupCoreMotion() {
+        motionManager.accelerometerUpdateInterval = 0.2
+        let queue = OperationQueue()
+        motionManager.startAccelerometerUpdates(to: queue,withHandler:
+            { accelerometerData, error in
+                guard let accelerometerData = accelerometerData else {
+                    return
+                }
+                let acceleration = accelerometerData.acceleration
+                self.xAcceleration = CGFloat(acceleration.x) * 0.75 + self.xAcceleration * 0.25 })
     }
     
     // MARK: - Overlay nodes
