@@ -63,6 +63,13 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     //5
     let cameraNode = SKCameraNode()
     
+    //6
+    var lava: SKSpriteNode!
+    
+    //7
+    var lastUpdateTimeInterval: TimeInterval = 0
+    var deltaTime: TimeInterval = 0
+    
     
     override func didMove(to view: SKView) {
       setupNodes()
@@ -93,8 +100,24 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     }
     
     override func update(_ currentTime: TimeInterval) {
-      updatePlayer()
-      updateCamera()
+     // 1
+      if lastUpdateTimeInterval > 0 {
+        deltaTime = currentTime - lastUpdateTimeInterval
+        } else {
+            deltaTime = 0
+            }
+        lastUpdateTimeInterval = currentTime
+        // 2
+        if isPaused {
+            return
+        }
+        // 3
+        if gameState == .playing {
+            updateCamera()
+            updatePlayer()
+            updateLava(deltaTime)
+            updateCollisionLava()
+        }
     }
     
     func sceneCropAmount() -> CGFloat {
@@ -118,6 +141,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         coinArrow = loadForegroundOverlayTemplate("CoinArrow")
         addChild(cameraNode)
         camera = cameraNode
+        lava = fgNode.childNode(withName: "Lava") as! SKSpriteNode
     }
     
     func setupLevel() {
@@ -172,6 +196,30 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         }
 
     }
+    
+    func updateLava(_ dt: TimeInterval) {
+        // 1
+        let bottomOfScreenY = camera!.position.y - (size.height / 2)
+        // 2
+        let bottomOfScreenYFg = convert(CGPoint(x: 0, y: bottomOfScreenY), to: fgNode).y
+        // 3
+        let lavaVelocityY = CGFloat(120)
+        let lavaStep = lavaVelocityY * CGFloat(dt)
+        var newLavaPositionY = lava.position.y + lavaStep
+        // 4
+        newLavaPositionY = max(newLavaPositionY, bottomOfScreenYFg - 125.0)
+        // 5
+        lava.position.y = newLavaPositionY
+    }
+    
+    func updateCollisionLava() {
+        if player.position.y < lava.position.y + 90 {
+            playerState = .lava
+            print("Lava!")
+            boostPlayer()
+        }
+    }
+    
     
     func setupCoreMotion() {
         motionManager.accelerometerUpdateInterval = 0.2
@@ -277,7 +325,9 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         let cameraTarget = convert(player.position, from: fgNode)
      // 2
           
-        let targetPositionY = cameraTarget.y - (size.height * 0.10) // 3
+        var targetPositionY = cameraTarget.y - (size.height * 0.10) // 3
+        let lavaPos = convert(lava.position, from: fgNode)
+        targetPositionY = max(targetPositionY, lavaPos.y)
         let diff = targetPositionY - camera!.position.y
     // 4
         let cameraLagFactor: CGFloat = 0.2
