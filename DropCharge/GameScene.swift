@@ -70,6 +70,9 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     var lastUpdateTimeInterval: TimeInterval = 0
     var deltaTime: TimeInterval = 0
     
+    //8
+    var lives = 3
+    
     
     override func didMove(to view: SKView) {
       setupNodes()
@@ -218,6 +221,9 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
             playerState = .lava
             print("Lava!")
             boostPlayer()
+            lives -= 1
+            if lives <= 0 {
+            gameOver() }
         }
     }
     
@@ -344,6 +350,26 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
                 addRandomForegroundOverlay()
             }
         }
+    }
+    
+    func gameOver() {
+      // 1
+        gameState = .gameOver
+        playerState = .dead
+    // 2
+        physicsWorld.contactDelegate = nil
+        player.physicsBody?.isDynamic = false
+    // 3
+        let moveUp = SKAction.moveBy(x: 0.0, y: size.height/2.0,duration: 0.5)
+        moveUp.timingMode = .easeOut
+        let moveDown = SKAction.moveBy(x: 0.0,y: -(size.height * 1.5), duration: 1.0)
+        moveDown.timingMode = .easeIn
+        player.run(SKAction.sequence([moveUp, moveDown]))
+    // 4
+        let gameOverSprite = SKSpriteNode(imageNamed: "GameOver")
+        gameOverSprite.position = camera!.position
+        gameOverSprite.zPosition = 10
+        addChild(gameOverSprite)
     }
     
     }
