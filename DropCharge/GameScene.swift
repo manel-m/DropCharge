@@ -174,7 +174,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         coinArrow = loadForegroundOverlayTemplate("CoinArrow")
         addChild(cameraNode)
         camera = cameraNode
-        lava = fgNode.childNode(withName: "Lava") as! SKSpriteNode
+        setupLava()
         
         //
           platformArrow = loadForegroundOverlayTemplate("PlatformArrow")
@@ -263,14 +263,14 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     }
     
     func updateCollisionLava() {
-        if player.position.y < lava.position.y + 90 {
+        if player.position.y < lava.position.y + 180 {
             playerState = .lava
             print("Lava!")
             boostPlayer()
             lives -= 1
             if lives <= 0 {
-            gameOver() }
-        }
+                gameOver() }
+            }
     }
     
     
@@ -514,11 +514,27 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         emitter.particleScale = 1.2
         emitter.particleScaleRange = 2.0
         emitter.particleScaleSpeed = -1.5
-        emitter.particleColor = SKColor.orange
+        //emitter.particleColor = SKColor.orange
         emitter.particleColorBlendFactor = 1
         emitter.particleBlendMode = SKBlendMode.add
         emitter.run(SKAction.removeFromParentAfterDelay(2.0))
+        
+        let sequence = SKKeyframeSequence(capacity: 5)
+        sequence.addKeyframeValue(SKColor.white, time: 0)
+        sequence.addKeyframeValue(SKColor.yellow, time: 0.10)
+        sequence.addKeyframeValue(SKColor.orange, time: 0.15)
+        sequence.addKeyframeValue(SKColor.red, time: 0.75)
+        sequence.addKeyframeValue(SKColor.black, time: 0.95)
+        emitter.particleColorSequence = sequence
       return emitter
+    }
+    
+    func setupLava() {
+        lava = fgNode.childNode(withName: "Lava") as! SKSpriteNode
+        let emitter = SKEmitterNode(fileNamed: "Lava.sks")!
+        emitter.particlePositionRange = CGVector(dx: size.width * 1.125, dy: 0.0)
+        emitter.advanceSimulationTime(3.0)
+        lava.addChild(emitter)
     }
     
     }
