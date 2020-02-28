@@ -20,6 +20,8 @@
 		996B6471240623C40020B8A9 /* CoinSDiagonal.sks in Resources */ = {isa = PBXBuildFile; fileRef = 996B6470240623C40020B8A9 /* CoinSDiagonal.sks */; };
 		996B64732406249F0020B8A9 /* CoinSCross.sks in Resources */ = {isa = PBXBuildFile; fileRef = 996B64722406249F0020B8A9 /* CoinSCross.sks */; };
 		996B6477240776170020B8A9 /* Lava.sks in Resources */ = {isa = PBXBuildFile; fileRef = 996B6475240776170020B8A9 /* Lava.sks */; };
+		996B647B2408E1120020B8A9 /* SmokeTrail.sks in Resources */ = {isa = PBXBuildFile; fileRef = 996B64792408E1120020B8A9 /* SmokeTrail.sks */; };
+		996B647C2408E1120020B8A9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 996B647A2408E1120020B8A9 /* Assets.xcassets */; };
 		99C720B323EBBB9B0030942C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C720B223EBBB9B0030942C /* AppDelegate.swift */; };
 		99C720B523EBBB9B0030942C /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 99C720B423EBBB9B0030942C /* GameScene.sks */; };
 		99C720B723EBBB9B0030942C /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 99C720B623EBBB9B0030942C /* Actions.sks */; };
@@ -58,6 +60,8 @@
 		996B6470240623C40020B8A9 /* CoinSDiagonal.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = CoinSDiagonal.sks; sourceTree = "<group>"; };
 		996B64722406249F0020B8A9 /* CoinSCross.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = CoinSCross.sks; sourceTree = "<group>"; };
 		996B6475240776170020B8A9 /* Lava.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Lava.sks; sourceTree = "<group>"; };
+		996B64792408E1120020B8A9 /* SmokeTrail.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = SmokeTrail.sks; sourceTree = "<group>"; };
+		996B647A2408E1120020B8A9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99C720AF23EBBB9B0030942C /* DropCharge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropCharge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		99C720B223EBBB9B0030942C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		99C720B423EBBB9B0030942C /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
@@ -99,6 +103,8 @@
 			isa = PBXGroup;
 			children = (
 				996B6475240776170020B8A9 /* Lava.sks */,
+				996B64792408E1120020B8A9 /* SmokeTrail.sks */,
+				996B647A2408E1120020B8A9 /* Assets.xcassets */,
 			);
 			path = Particles;
 			sourceTree = "<group>";
@@ -238,6 +244,7 @@
 			files = (
 				99C720CE23ED171B0030942C /* CoinArrow.sks in Resources */,
 				99C720BE23EBBB9B0030942C /* Main.storyboard in Resources */,
+				996B647C2408E1120020B8A9 /* Assets.xcassets in Resources */,
 				996B646724061F380020B8A9 /* BreakDiagonal.sks in Resources */,
 				996B6477240776170020B8A9 /* Lava.sks in Resources */,
 				996B6471240623C40020B8A9 /* CoinSDiagonal.sks in Resources */,
@@ -245,6 +252,7 @@
 				99C720B523EBBB9B0030942C /* GameScene.sks in Resources */,
 				99C720C023EBBBA80030942C /* Assets.xcassets in Resources */,
 				996B646524061E190020B8A9 /* BreakArrow.sks in Resources */,
+				996B647B2408E1120020B8A9 /* SmokeTrail.sks in Resources */,
 				996B6461240610260020B8A9 /* PlatformArrow.sks in Resources */,
 				996B645D24060C560020B8A9 /* Break5Across.sks in Resources */,
 				996B64732406249F0020B8A9 /* CoinSCross.sks in Resources */,
