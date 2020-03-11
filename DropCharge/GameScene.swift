@@ -88,6 +88,46 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     //8
     var lives = 3
     
+    //9
+    let soundBombDrop = SKAction.playSoundFileNamed("bombDrop.wav", waitForCompletion: true)
+    let soundSuperBoost = SKAction.playSoundFileNamed("nitro.wav", waitForCompletion: false)
+    let soundTickTock = SKAction.playSoundFileNamed("tickTock.wav", waitForCompletion: true)
+    let soundBoost = SKAction.playSoundFileNamed("boost.wav", waitForCompletion: false)
+    let soundJump = SKAction.playSoundFileNamed("jump.wav", waitForCompletion: false)
+    let soundCoin = SKAction.playSoundFileNamed("coin1.wav", waitForCompletion: false)
+    let soundBrick = SKAction.playSoundFileNamed("brick.caf", waitForCompletion: false)
+    let soundHitLava = SKAction.playSoundFileNamed( "DrownFireBug.mp3", waitForCompletion: false)
+    let soundGameOver = SKAction.playSoundFileNamed( "player_die.wav", waitForCompletion: false)
+    let soundExplosions = [ SKAction.playSoundFileNamed("explosion1.wav", waitForCompletion: false),
+                            SKAction.playSoundFileNamed("explosion2.wav",waitForCompletion: false),
+                            SKAction.playSoundFileNamed("explosion3.wav", waitForCompletion: false),
+                            SKAction.playSoundFileNamed("explosion4.wav", waitForCompletion: false)]
+    
+    // 10
+    var coinAnimation: SKAction!
+    var coinSpecialAnimation: SKAction!
+    
+    //11
+    var playerAnimationJump: SKAction!
+    var playerAnimationFall: SKAction!
+    var playerAnimationSteerLeft: SKAction!
+    var playerAnimationSteerRight: SKAction!
+    var currentPlayerAnimation: SKAction?
+    
+    //12
+    var playerTrail: SKEmitterNode!
+    
+    //13
+    var timeSinceLastExplosion: TimeInterval = 0
+    var timeForNextExplosion: TimeInterval = 1.0
+    
+    //14
+    let gameGain: CGFloat = 2.5
+    
+    //15
+    var redAlertTime: TimeInterval = 0
+
+    
     
     override func didMove(to view: SKView) {
       setupNodes()
@@ -97,6 +137,14 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
       fgNode.childNode(withName: "Ready")!.run(scale)
       setupCoreMotion()
       physicsWorld.contactDelegate = self
+      playBackgroundMusic(name: "SpaceGame.caf")
+        
+      playerAnimationJump = setupAnimationWithPrefix( "player01_jump_", start: 1, end: 4, timePerFrame: 0.1)
+      playerAnimationFall = setupAnimationWithPrefix( "player01_fall_", start: 1, end: 3, timePerFrame: 0.1)
+      playerAnimationSteerLeft = setupAnimationWithPrefix( "player01_steerleft_", start: 1, end: 2, timePerFrame: 0.1)
+      playerAnimationSteerRight = setupAnimationWithPrefix( "player01_steerright_", start: 1, end: 2, timePerFrame: 0.1)
+        
+        
 
     }
     
@@ -104,31 +152,34 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         let other = contact.bodyA.categoryBitMask == PhysicsCategory.Player ? contact.bodyB : contact.bodyA
         switch other.categoryBitMask {
         case PhysicsCategory.CoinNormal:
-          if let coin = other.node as? SKSpriteNode {
-            coin.removeFromParent()
-            jumpPlayer()
-          }
+            if let coin = other.node as? SKSpriteNode {
+                emitParticles(name: "CollectNormal", sprite: coin)
+                jumpPlayer()
+                run(soundCoin)
+                }
         case PhysicsCategory.CoinSpecial:
-          if let coin = other.node as? SKSpriteNode {
-            coin.removeFromParent()
+        if let coin = other.node as? SKSpriteNode {
+            emitParticles(name: "CollectSpecial", sprite: coin)
             boostPlayer()
-          }
+            run(soundBoost)
+            }
         case PhysicsCategory.PlatformNormal:
-          if let _ = other.node as? SKSpriteNode {
-            if player.physicsBody!.velocity.dy < 0 {
-              jumpPlayer()
+            if let platform = other.node as? SKSpriteNode {
+                if player.physicsBody!.velocity.dy < 0 {
+                    platformAction(platform, breakable: false)
+                    jumpPlayer()
+                    run(soundJump)
+                }
             }
-          }
-        case PhysicsCategory.PlatformBreakable:
-          if let platform = other.node as? SKSpriteNode {
-            if player.physicsBody!.velocity.dy < 0 {
-              platform.removeFromParent()
-              jumpPlayer()
+            case PhysicsCategory.PlatformBreakable:
+            if let platform = other.node as? SKSpriteNode { if player.physicsBody!.velocity.dy < 0 {
+                platformAction(platform, breakable: true)
+                jumpPlayer()
+                run(soundBrick)
+            } }
+            default:
+            break
             }
-          }
-        default:
-          break
-        }
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -150,6 +201,8 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
             updatePlayer()
             updateLava(deltaTime)
             updateCollisionLava()
+            updateExplosions(deltaTime)
+            updateRedAlert(deltaTime)
         }
     }
     
@@ -183,6 +236,10 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
           breakArrow = loadForegroundOverlayTemplate("BreakArrow")
           break5Across = loadForegroundOverlayTemplate("Break5Across")
           breakDiagonal = loadForegroundOverlayTemplate("BreakDiagonal")
+        
+          coinAnimation = setupAnimationWithPrefix("powerup05_", start: 1, end: 6, timePerFrame: 0.083)
+          coinSpecialAnimation = setupAnimationWithPrefix("powerup01_", start: 1, end: 6, timePerFrame: 0.083)
+        
           coin5Across = loadForegroundOverlayTemplate("Coin5Across")
           coinDiagonal = loadForegroundOverlayTemplate("CoinDiagonal")
           coinCross = loadForegroundOverlayTemplate("CoinCross")
@@ -218,6 +275,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         //player.physicsBody!.categoryBitMask = 0
         player.physicsBody!.collisionBitMask = 0
         player.physicsBody!.categoryBitMask = PhysicsCategory.Player
+        playerTrail = addTrail(name: "PlayerTrail")
     }
     
     func updatePlayer() {
@@ -239,10 +297,27 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         // Check player state
         if player.physicsBody!.velocity.dy < CGFloat(0.0) && playerState != .fall {
             playerState = .fall
-            print("Falling.")
+            if playerTrail.particleBirthRate == 0 {
+                playerTrail.particleBirthRate = 200 }
         } else if player.physicsBody!.velocity.dy > CGFloat(0.0) && playerState != .jump {
             playerState = .jump
-            print("Jumping.")
+            if playerTrail.particleBirthRate == 0 {
+                playerTrail.particleBirthRate = 200 }
+        }
+        
+        // Animate player
+        if playerState == .jump {
+            if abs(player.physicsBody!.velocity.dx) > 100.0 {
+                if player.physicsBody!.velocity.dx > 0 {
+                    runPlayerAnimation(playerAnimationSteerRight)
+                } else {
+                    runPlayerAnimation(playerAnimationSteerLeft)
+                }
+            } else {
+                runPlayerAnimation(playerAnimationJump)
+            }
+        } else if playerState == .fall {
+            runPlayerAnimation(playerAnimationFall)
         }
 
     }
@@ -266,14 +341,25 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
        if player.position.y < lava.position.y + 180 {
         if playerState != .lava {
             playerState = .lava
+            playerTrail.particleBirthRate = 0
             let smokeTrail = addTrail(name: "SmokeTrail")
-            run(SKAction.sequence([SKAction.wait(forDuration: 3.0), SKAction.run() { self.removeTrail(trail: smokeTrail) }]))
-        }
-       boostPlayer()
+            //run(SKAction.sequence([SKAction.wait(forDuration: 3.0), SKAction.run() { self.removeTrail(trail: smokeTrail) }]))
+            run(SKAction.sequence([ soundHitLava, SKAction.wait(forDuration: 3.0), SKAction.run() {self.removeTrail(trail: smokeTrail) }]))}
+        boostPlayer()
+        screenShakeByAmt(50)
         lives -= 1
        if lives <= 0 {
        gameOver() }
        }
+    }
+    
+    func updateExplosions(_ dt: TimeInterval) {
+        timeSinceLastExplosion += dt
+        if timeSinceLastExplosion > timeForNextExplosion {
+            timeForNextExplosion = TimeInterval(CGFloat.random(min:0.1, max: 0.5))
+            timeSinceLastExplosion = 0
+            createRandomExplosion()
+      }
     }
     
     
@@ -306,6 +392,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         foregroundOverlay.xScale = -1.0
         }
         fgNode.addChild(foregroundOverlay)
+        foregroundOverlay.isPaused = false
     }
     func addRandomForegroundOverlay() {
      let overlaySprite: SKSpriteNode!
@@ -380,6 +467,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
                 overlaySprite = coinSArrow
               }
             }
+            animateCoinsInOverlay(overlaySprite)
           }
           
           createForegroundOverlay(overlaySprite, flipX: flipH)
@@ -422,25 +510,33 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         let repeatSeq = SKAction.repeatForever(sequence)
         fgNode.childNode(withName: "Bomb")!.run(SKAction.unhide())
         fgNode.childNode(withName: "Bomb")!.run(repeatSeq)
-        run(SKAction.sequence([
-        SKAction.wait(forDuration: 2.0),
-        SKAction.run(startGame)]))
+        //run(SKAction.sequence([SKAction.wait(forDuration: 2.0),SKAction.run(startGame)]))
+        run(SKAction.sequence([ soundBombDrop, soundTickTock, SKAction.run(startGame) ]))
     }
+    
         func startGame() {
         let bomb = fgNode.childNode(withName: "Bomb")!
         let bombBlast = explosion(intensity: 2.0)
         bombBlast.position = bomb.position
         fgNode.addChild(bombBlast)
+        screenShakeByAmt(100)
         bomb.removeFromParent()
+        run(soundExplosions[3])
         gameState = .playing
         player.physicsBody!.isDynamic = true
         boostPlayer()
+        playBackgroundMusic(name: "bgMusic.mp3")
             
+        let alarm = SKAudioNode(fileNamed: "alarm.wav")
+        alarm.name = "alarm"
+        alarm.autoplayLooped = true
+        addChild(alarm)
     }
     
     func setPlayerVelocity(_ amount:CGFloat) {
-        let gain: CGFloat = 2.0
-        player.physicsBody!.velocity.dy = max(player.physicsBody!.velocity.dy, amount * gain)
+//        let gain: CGFloat = 2.0
+//        player.physicsBody!.velocity.dy = max(player.physicsBody!.velocity.dy, amount * gain)
+        player.physicsBody!.velocity.dy = max(player.physicsBody!.velocity.dy, amount * gameGain)
         
     }
     
@@ -449,6 +545,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     }
     func boostPlayer() {
       setPlayerVelocity(1200)
+      screenShakeByAmt(40)
     }
     func superBoostPlayer() {
       setPlayerVelocity(1700)
@@ -478,6 +575,12 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
                 addRandomForegroundOverlay()
             }
         }
+        // remove old foreground nodes...
+        for fgChild in fgNode.children {
+            let nodePos = fgNode.convert(fgChild.position, to: self)
+            if !isNodeVisible(fgChild, positionY: nodePos.y) {
+                fgChild.removeFromParent() }
+            }
     }
     
     func gameOver() {
@@ -493,11 +596,42 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         let moveDown = SKAction.moveBy(x: 0.0,y: -(size.height * 1.5), duration: 1.0)
         moveDown.timingMode = .easeIn
         player.run(SKAction.sequence([moveUp, moveDown]))
+        run(soundGameOver)
     // 4
         let gameOverSprite = SKSpriteNode(imageNamed: "GameOver")
         gameOverSprite.position = camera!.position
         gameOverSprite.zPosition = 10
         addChild(gameOverSprite)
+        
+        playBackgroundMusic(name: "SpaceGame.caf")
+        if let alarm = childNode(withName: "alarm") {
+            alarm.removeFromParent() }
+        let blast = explosion(intensity: 3.0)
+        blast.position = gameOverSprite.position
+        blast.zPosition = 11
+        addChild(blast)
+        run(soundExplosions[3])
+    }
+    
+    func createRandomExplosion() {
+      // 1
+        let cameraPos = camera!.position
+        let sceneW = size.width / 2.0
+        let sceneH = size.height
+        let randomX = CGFloat.random(min: -sceneW, max: sceneW)
+        let randomY = CGFloat.random(min: cameraPos.y - sceneH / 2, max: cameraPos.y + sceneH * 0.35)
+        let explosionPos = CGPoint(x: randomX, y: randomY)
+        // 2
+        let randomNum = Int.random(soundExplosions.count)
+        run(soundExplosions[randomNum])
+    // 3
+        let explode = explosion(intensity: 0.25 * CGFloat(randomNum + 1))
+        explode.position = convert(explosionPos, to: bgNode)
+        explode.run(SKAction.removeFromParentAfterDelay(2.0))
+        bgNode.addChild(explode)
+        if randomNum == 3 {
+          screenShakeByAmt(10)
+        }
     }
     
     func explosion(intensity: CGFloat) -> SKEmitterNode {
@@ -551,5 +685,98 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         trail.numParticlesToEmit = 1
         trail.run(SKAction.removeFromParentAfterDelay(1.0)) }
     
+    func playBackgroundMusic(name: String) {
+      if let backgroundMusic = childNode(withName: "backgroundMusic") { backgroundMusic.removeFromParent()
+            }
+        let music = SKAudioNode(fileNamed: name)
+        music.name = "backgroundMusic"
+        music.autoplayLooped = true
+        addChild(music)
+    }
+    // MARK: - Animation
+    func setupAnimationWithPrefix(_ prefix: String, start: Int, end: Int, timePerFrame: TimeInterval) -> SKAction {
+        var textures: [SKTexture] = []
+        for i in start...end {
+            textures.append(SKTexture(imageNamed: "\(prefix)\(i)")) }
+        return SKAction.animate(with: textures, timePerFrame: timePerFrame)
+    }
+    
+    func animateCoinsInOverlay(_ overlay: SKSpriteNode) { overlay.enumerateChildNodes(withName: "*",using: { (node, stop) in
+        if node.name == "special" {
+            node.run( SKAction.repeatForever(self.coinSpecialAnimation))
+            } else {
+                node.run(SKAction.repeatForever(self.coinAnimation)) } })
+    }
+    
+    func runPlayerAnimation(_ animation: SKAction) {
+        if animation != currentPlayerAnimation {
+            player.removeAction(forKey: "playerAnimation")
+            player.run(animation, withKey: "playerAnimation")
+            currentPlayerAnimation = animation
+            }
+        }
+    func emitParticles(name: String, sprite: SKSpriteNode) {
+        let pos = fgNode.convert(sprite.position, from: sprite.parent!)
+        let particles = SKEmitterNode(fileNamed: name)!
+        particles.position = pos
+        particles.zPosition = 3
+        fgNode.addChild(particles)
+        particles.run(SKAction.removeFromParentAfterDelay(1.0))
+        sprite.run(SKAction.sequence( [SKAction.scale(to: 0.0, duration: 0.5),SKAction.removeFromParent()]))
+        }
+    
+    func screenShakeByAmt(_ amt: CGFloat) {
+        // 1
+        let worldNode = childNode(withName: "World")!
+        worldNode.position = CGPoint(x: 0.0, y: 0.0)
+        worldNode.removeAction(forKey: "shake")
+        // 2
+        let amount = CGPoint(x: 0, y: -(amt * gameGain))
+        // 3
+        let action = SKAction.screenShakeWithNode(worldNode,amount: amount, oscillations: 10, duration: 2.0)
+        // 4
+         worldNode.run(action, withKey: "shake")
+        }
+    
+    func isNodeVisible(_ node: SKNode, positionY: CGFloat) -> Bool {
+        if !camera!.contains(node) {
+            if positionY < camera!.position.y - size.height * 2.0 {
+                return false
+            } }
+    return true
+    }
+    
+    func updateRedAlert(_ lastUpdateTime: TimeInterval) {
+        // 1
+        redAlertTime += lastUpdateTime
+        let amt: CGFloat = CGFloat(redAlertTime) * π * 2.0 / 1.93725
+        let colorBlendFactor = (sin(amt) + 1.0) / 2.0
+        // 2
+        for bgChild in bgNode.children {
+            for node in bgChild.children {
+                if let sprite = node as? SKSpriteNode {
+                    let nodePos = bgChild.convert(sprite.position, to: self)
+                    // 3
+                    if !isNodeVisible(sprite, positionY: nodePos.y) {
+                        sprite.removeFromParent()
+                    } else {
+                        sprite.color = SKColorWithRGB(255, g: 0, b: 0)
+                        sprite.colorBlendFactor = colorBlendFactor }
+                    }
+            }
+            // 4
+            if bgChild.name == "Overlay" && bgChild.children.count == 0 {
+                bgChild.removeFromParent() }
+        }
+    }
+    
+    func platformAction(_ sprite: SKSpriteNode, breakable: Bool) {
+        let amount = CGPoint(x: 0, y: -75.0)
+        let action = SKAction.screenShakeWithNode(sprite,amount: amount, oscillations: 10, duration: 2.0)
+        sprite.run(action)
+        if breakable == true {
+        emitParticles(name: "BrokenPlatform", sprite: sprite)
+        }
+    }
     }
 
